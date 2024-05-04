@@ -1,3 +1,32 @@
+<script setup lang="ts">
+import {ref, watchEffect} from 'vue';
+import hljs from 'highlight.js';
+import IconCodeCopy from "./IconCodeCopy.vue";
+
+// 定义props
+const props = defineProps<{
+  code: string;
+  language?: string;
+}>();
+
+const highlightedCode = ref('');
+
+// 使用watchEffect来处理代码高亮
+watchEffect(() => {
+  const validLanguage = hljs.getLanguage(props.language);
+  if (validLanguage) {
+    highlightedCode.value = hljs.highlight(props.code, {language: props.language}).value;
+  } else {
+    highlightedCode.value = hljs.highlightAuto(props.code).value;
+  }
+});
+
+// 定义方法
+const copyCode = () => {
+  console.log("copy code");
+};
+</script>
+
 <template>
   <div class="code-enhance light">
     <div class="code-enhance-header">
@@ -13,52 +42,6 @@
   </div>
 </template>
 
-<script setup lang="ts">
-import {computed, onMounted, onUnmounted, ref, watch} from 'vue';
-import IconCodeCopy from "./IconCodeCopy.vue";
-
-// 定义props
-const props = defineProps<{
-  code: string;
-  language?: string;
-}>();
-
-// 创建Worker实例
-const worker = new Worker('/highlightWorker.js');
-
-const codeRef = ref(props.code);
-const highlightedCode = ref('');
-
-// 监听Worker消息
-worker.onmessage = function (e) {
-  highlightedCode.value = e.data; // 更新计算结果
-};
-
-// 组件挂载时发送数据到Worker
-onMounted(() => {
-  worker.postMessage({code: codeRef.value, language: props.language});
-});
-
-// 组件卸载时终止Worker
-onUnmounted(() => {
-  worker.terminate();
-});
-
-// 处理props.code变化
-watch(
-    () => props.code,
-    newVal => {
-      codeRef.value = newVal;
-      // 当代码更新时，发送新的代码到Worker
-      worker.postMessage({code: newVal, language: props.language});
-    }
-);
-
-// 定义方法
-const copyCode = () => {
-
-};
-</script>
 
 <style scoped lang="scss">
 .code-enhance {

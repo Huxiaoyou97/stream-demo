@@ -1,32 +1,12 @@
-<template>
-  <div>
-    <input type="text" v-model="val">
-    <button @click="fetchStream">请求流数据</button>
-    <hr>
-    <p v-if="!streamContent">请开始您的提问</p>
-    <div v-for="(block, index) in contentBlocks" :key="index">
-      <div v-if="block.type === 'html'" v-html="block.html"></div>
-      <CodeBlock
-          v-else-if="block.type === 'code'"
-          :code="block.code"
-          :language="block.language"
-      />
-    </div>
-  </div>
-</template>
-
 <script setup lang="ts">
-
 import {ref, computed} from "vue";
 import {marked} from 'marked';
-import hljs from 'highlight.js';
-import 'highlight.js/styles/github.css';
 import CodeBlock from "./components/CodeBlock.vue";
 
-const val = ref('写一段js排序算法代码')
+const prompt = ref('写一段js排序算法代码')
 const streamContent = ref('');
 
-// 使用marked和highlight.js渲染markdown内容
+// 渲染markdown内容
 const contentBlocks = computed(() => {
   const renderer = new marked.Renderer();
   let blockIndex = 0; // 用于跟踪代码块的索引
@@ -72,7 +52,7 @@ async function fetchStream() {
     select_param: "",
     chat_mode: "chat_normal",
     model_name: "qwen_proxyllm",
-    user_input: val.value || '你好',
+    user_input: prompt.value || '你好',
     conv_uid: "02ab8aa4-0938-11ef-ad42-0242ac110006",
   };
 
@@ -99,3 +79,20 @@ async function fetchStream() {
   }
 }
 </script>
+
+<template>
+  <div>
+    <input type="text" v-model="prompt">
+    <button @click="fetchStream">请求流数据</button>
+    <hr>
+    <p v-if="!streamContent">请开始您的提问</p>
+    <div v-for="(block, index) in contentBlocks" :key="index">
+      <div v-if="block.type === 'html'" v-html="block.html"></div>
+      <CodeBlock
+          v-else-if="block.type === 'code'"
+          :code="block.code"
+          :language="block.language"
+      />
+    </div>
+  </div>
+</template>
