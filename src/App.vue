@@ -1,42 +1,101 @@
 <template>
   <div>
-    <button @click="handle">请求</button>
-<!--    <div v-if="result">数据接收中...</div>-->
+    <input type="text" v-model="val">
+    <button @click="fetchStream">请求流数据</button>
+    <hr>
+    <p v-if="!streamContent">请开始您的提问</p>
+    <div v-for="(block, index) in contentBlocks" :key="index">
+      <div v-if="block.type === 'html'" v-html="block.html"></div>
+      <CodeBlock
+          v-else-if="block.type === 'code'"
+          :code="block.code"
+          :language="block.language"
+      />
+    </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import axios from "axios";
-import { ref } from "vue";
 
-const result = ref('');
+import {ref, computed} from "vue";
+import {marked} from 'marked';
+import hljs from 'highlight.js';
+import 'highlight.js/styles/github.css';
+import CodeBlock from "./components/CodeBlock.vue";
 
-function handle() {
+const val = ref('写一段js排序算法代码')
+const streamContent = ref('');
+
+// 使用marked和highlight.js渲染markdown内容
+const contentBlocks = computed(() => {
+  const renderer = new marked.Renderer();
+  let blockIndex = 0; // 用于跟踪代码块的索引
+  const blocks = []; // 存储所有块的数组
+
+  renderer.code = (code, lang) => {
+    const index = blockIndex++; // 获取当前代码块的索引
+    // 将代码块信息存储到 blocks 数组中
+    blocks.push({
+      type: 'code',
+      code: code,
+      language: lang,
+      index: index, // 存储索引，用于后续替换
+    });
+    // 返回一个特殊的占位符，包含当前代码块的索引
+    return `<!--codeblock-${index}-->`;
+  };
+
+  // 使用自定义的 renderer 解析 Markdown
+  const html = marked(streamContent.value, {renderer});
+  let codeBlockRegex = /<!--codeblock-(\d+)-->/;
+
+  // 将解析后的 HTML 分割成块，并存储到 blocks 数组中
+  const list = html.split(/(<!--codeblock-\d+-->)/).map((part, index) => {
+    if (codeBlockRegex.test(part)) {
+      let match = part.match(codeBlockRegex);
+      return blocks[match?.[1]];
+    } else {
+      return {
+        type: 'html',
+        html: part,
+        index: index, // 存储索引，用于后续替换
+      };
+    }
+  });
+  return list;
+});
+
+async function fetchStream() {
+  streamContent.value = '';
   const url = "http://region-3.seetacloud.com:26885/api/v1/chat/completions";
   const data = {
     select_param: "",
     chat_mode: "chat_normal",
     model_name: "qwen_proxyllm",
-    user_input: "你好",
+    user_input: val.value || '你好',
     conv_uid: "02ab8aa4-0938-11ef-ad42-0242ac110006",
   };
 
-  axios.post(url, data, {
-    onDownloadProgress: progressEvent => {
-      console.log(progressEvent.event?.target.response, '----progressEvent')
-      // 处理流式数据
-      // const text = progressEvent.currentTarget.response;
-      // // result.value += text;
-      // console.log('text', text);
+  try {
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(data)
+    });
+
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder();
+
+    while (true) {
+      const {done, value} = await reader.read();
+      if (done) break;
+      const textChunk = decoder.decode(value, {stream: true});
+      streamContent.value = textChunk.replace(/^data:/, '').replace(/\\n/g, '\n');
     }
-  }).then((res) => {
-    console.log('请求完成', res);
-  }).catch((error) => {
+  } catch (error) {
     console.error('请求失败', error);
-  });
+  }
 }
 </script>
-
-<style scoped>
-
-</style>
