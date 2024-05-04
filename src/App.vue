@@ -80,6 +80,7 @@ async function fetchMOStream() {
 
         // 判断text的长度知否小于streamContent.value的长度，如果小于则不更新 避免数据错乱导致页面闪动
         if (text.length >= streamContent.value.length) {
+          console.log(text, "------------------text")
           streamContent.value = text;
         }
       }
@@ -132,6 +133,7 @@ async function fetchStream() {
 
         // 判断text的长度是否小于streamContent.value的长度 如果小于则不更新 避免数据错乱导致页面闪动
         if (text.length >= streamContent.value.length) {
+          console.log(text, "------------------text")
           streamContent.value = text;
         }
       }
