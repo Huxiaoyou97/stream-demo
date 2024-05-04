@@ -3,6 +3,7 @@ import {ref, computed} from "vue";
 import {marked} from 'marked';
 import CodeBlock from "./components/CodeBlock.vue";
 
+const loading = ref(false);
 const prompt = ref('写一段js排序算法代码')
 const streamContent = ref('');
 
@@ -46,6 +47,10 @@ const contentBlocks = computed(() => {
 });
 
 async function fetchStream() {
+
+  if (loading.value) return;
+  loading.value = true;
+
   streamContent.value = '';
   const url = "http://region-3.seetacloud.com:26885/api/v1/chat/completions";
   const data = {
@@ -76,6 +81,8 @@ async function fetchStream() {
     }
   } catch (error) {
     console.error('请求失败', error);
+  } finally {
+    loading.value = false;
   }
 }
 </script>
@@ -85,7 +92,7 @@ async function fetchStream() {
     <input type="text" v-model="prompt">
     <button @click="fetchStream">请求流数据</button>
     <hr>
-    <p v-if="!streamContent">请开始您的提问</p>
+    <p v-if="!streamContent && !loading">请开始您的提问</p>
     <div v-for="(block, index) in contentBlocks" :key="index">
       <div v-if="block.type === 'html'" v-html="block.html"></div>
       <CodeBlock
@@ -94,5 +101,6 @@ async function fetchStream() {
           :language="block.language"
       />
     </div>
+    <p v-if="loading">加载中...</p>
   </div>
 </template>
