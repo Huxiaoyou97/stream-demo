@@ -23,7 +23,7 @@ watchEffect(() => {
 
 // 定义方法
 const copyCode = () => {
-  console.log("copy code");
+  console.log(props.code);
 };
 </script>
 
