@@ -12,13 +12,11 @@
     "axios": "^1.6.8",
     "github-markdown-css": "^5.5.1",
     "highlight.js": "^11.9.0",
-    "lodash": "^4.17.21",
     "marked": "^4.0.0",
     "sass": "^1.76.0",
     "vue": "^3.4.21"
   },
   "devDependencies": {
-    "@types/lodash": "^4.17.0",
     "@types/marked": "^4.0.0",
     "@vitejs/plugin-vue": "^5.0.4",
     "vite": "^5.2.0"
