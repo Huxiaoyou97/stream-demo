@@ -11,11 +11,14 @@
   "dependencies": {
     "github-markdown-css": "^5.5.1",
     "highlight.js": "^11.9.0",
+    "markdown-it": "^13.0.0",
     "marked": "^4.0.0",
     "sass": "^1.76.0",
     "vue": "^3.4.21"
   },
   "devDependencies": {
+    "@types/markdown-it": "^13.0.7",
+    "@types/markdown-it-link-attributes": "^3.0.4",
     "@types/marked": "^4.0.0",
     "@vitejs/plugin-vue": "^5.0.4",
     "vite": "^5.2.0"

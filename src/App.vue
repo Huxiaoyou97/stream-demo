@@ -4,8 +4,9 @@ import {marked} from 'marked';
 import CodeBlock from "./components/CodeBlock.vue";
 
 const loading = ref(false);
-const prompt = ref('你好')
+const prompt = ref('写一段js快排')
 const streamContent = ref('');
+
 
 // 渲染markdown内容
 const contentBlocks = computed(() => {
@@ -71,8 +72,17 @@ async function fetchMOStream() {
       const {done, value} = await reader.read();
       if (done) break;
       const textChunk = decoder.decode(value, {stream: true});
-      console.log(textChunk, "-----textChunk")
-      streamContent.value = textChunk.replace(/^data:/, '').replace(/\\n/g, '\n');
+      // 找到最后一个"data:"的位置 并从那里开始截取到字符串结束
+      const lastIndex = textChunk.lastIndexOf('data:');
+      if (lastIndex !== -1) {
+        // 避免重复数据
+        const text = textChunk.substring(lastIndex + 'data:'.length).replace(/\\n/g, '\n');
+
+        // 判断text的长度知否小于streamContent.value的长度，如果小于则不更新 避免数据错乱导致页面闪动
+        if (text.length >= streamContent.value.length) {
+          streamContent.value = text;
+        }
+      }
     }
   } catch (error) {
     console.error('请求失败', error);
@@ -114,8 +124,17 @@ async function fetchStream() {
       const {done, value} = await reader.read();
       if (done) break;
       const textChunk = decoder.decode(value, {stream: true});
-      console.log(textChunk, "-----textChunk")
-      streamContent.value = textChunk.replace(/^data:/, '').replace(/\\n/g, '\n');
+      // 找到最后一个"data:"的位置 并从那里开始截取到字符串结束
+      const lastIndex = textChunk.lastIndexOf('data:');
+      if (lastIndex !== -1) {
+        // 避免重复数据
+        const text = textChunk.substring(lastIndex + 'data:'.length).replace(/\\n/g, '\n');
+
+        // 判断text的长度知否小于streamContent.value的长度，如果小于则不更新 避免数据错乱导致页面闪动
+        if (text.length >= streamContent.value.length) {
+          streamContent.value = text;
+        }
+      }
     }
   } catch (error) {
     console.error('请求失败', error);
