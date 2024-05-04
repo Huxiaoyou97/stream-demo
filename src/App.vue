@@ -130,7 +130,7 @@ async function fetchStream() {
         // 避免重复数据
         const text = textChunk.substring(lastIndex + 'data:'.length).replace(/\\n/g, '\n');
 
-        // 判断text的长度是否小于streamContent.value的长度，如果小于则不更新 避免数据错乱导致页面闪动
+        // 判断text的长度是否小于streamContent.value的长度 如果小于则不更新 避免数据错乱导致页面闪动
         if (text.length >= streamContent.value.length) {
           streamContent.value = text;
         }
