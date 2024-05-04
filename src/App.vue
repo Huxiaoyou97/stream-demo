@@ -4,7 +4,7 @@ import {marked} from 'marked';
 import CodeBlock from "./components/CodeBlock.vue";
 
 const loading = ref(false);
-const prompt = ref('写一段js排序算法代码')
+const prompt = ref('你好')
 const streamContent = ref('');
 
 // 渲染markdown内容
@@ -46,6 +46,43 @@ const contentBlocks = computed(() => {
   return list;
 });
 
+async function fetchMOStream() {
+  if (loading.value) return;
+  loading.value = true;
+
+  streamContent.value = '';
+  const url = "/api/chat/v2";
+  const data = {user_input: prompt.value, select_param: "modb"};
+
+  try {
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      credentials: 'include', // 携带 cookies
+      body: JSON.stringify(data)
+    });
+
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder();
+
+    while (true) {
+      const {done, value} = await reader.read();
+      if (done) break;
+      const textChunk = decoder.decode(value, {stream: true});
+      console.log(textChunk, "-----textChunk")
+      streamContent.value = textChunk.replace(/^data:/, '').replace(/\\n/g, '\n');
+    }
+  } catch (error) {
+    console.error('请求失败', error);
+  } finally {
+    loading.value = false;
+  }
+}
+
+document.cookie = `token=Bearer%20eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiIxMDkzIiwiZXhwIjoxNzE1MzM0NjIzLCJiaXpUeXBlIjoibW9kYiIsInJvbGVOYW1lIjoiUk9MRV9zeXMiLCJwZXJtaXNzaW9ucyI6WyJjb21wYW55IiwiZXhhbSJdfQ.7bmhkNZ_g3m4HPxKnMFa3frUOO-ZXR4kDyqeTFt4P7_cjFw-JxPcSXl9zgi_RQ-lVySxlU4VTNWszu_xSLUoMQ; token=Bearer%20eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiIxMDkzIiwiZXhwIjoxNzE1MzM0NjIzLCJiaXpUeXBlIjoibW9kYiIsInJvbGVOYW1lIjoiUk9MRV9zeXMiLCJwZXJtaXNzaW9ucyI6WyJjb21wYW55IiwiZXhhbSJdfQ.7bmhkNZ_g3m4HPxKnMFa3frUOO-ZXR4kDyqeTFt4P7_cjFw-JxPcSXl9zgi_RQ-lVySxlU4VTNWszu_xSLUoMQ; userID=1093; JSESSIONID=62998D2614650B58775C7C65867725FD`
+
 async function fetchStream() {
 
   if (loading.value) return;
@@ -77,6 +114,7 @@ async function fetchStream() {
       const {done, value} = await reader.read();
       if (done) break;
       const textChunk = decoder.decode(value, {stream: true});
+      console.log(textChunk, "-----textChunk")
       streamContent.value = textChunk.replace(/^data:/, '').replace(/\\n/g, '\n');
     }
   } catch (error) {
@@ -90,7 +128,8 @@ async function fetchStream() {
 <template>
   <div>
     <input type="text" v-model="prompt">
-    <button @click="fetchStream">请求流数据</button>
+    <button @click="fetchStream">第三方请求流数据</button>
+    <button @click="fetchMOStream">墨天轮请求流数据</button>
     <hr>
     <p v-if="!streamContent && !loading">请开始您的提问</p>
     <div v-for="(block, index) in contentBlocks" :key="index">
